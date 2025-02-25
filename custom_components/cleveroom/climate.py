@@ -89,14 +89,16 @@ async def async_setup_entry(
         try:
             if is_climate(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 climate = CleveroomClimate(hass, device, client, gateway_id)
                 climates.append(climate)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][climate.unique_id] = climate
             elif is_heater(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 climate = CleveroomFloorHeating(hass, device, client, gateway_id)
                 climates.append(climate)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -114,7 +116,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add light new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     climate = CleveroomClimate(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -125,7 +128,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add light new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     climate = CleveroomFloorHeating(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -133,9 +137,12 @@ async def async_setup_entry(
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][climate.unique_id] = climate
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, "
+                                f"error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 
@@ -187,7 +194,8 @@ class CleveroomClimate(ClimateEntity):
                 ClimateEntityFeature.TURN_OFF
         )
 
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY,
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT,
+                                 HVACMode.DRY, HVACMode.FAN_ONLY,
                                  HVACMode.AUTO]
         self._attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
         self._attr_swing_modes = [SWING_ON, SWING_OFF]

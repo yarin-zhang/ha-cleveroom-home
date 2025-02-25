@@ -22,9 +22,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.config_entries import ConfigEntry  # Import ConfigEntry
-from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_binary_sensor, \
-    generate_object_id
+from homeassistant.config_entries import ConfigEntry
+from . import (DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType,
+               device_registry_area_update, is_binary_sensor,
+               generate_object_id)
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
@@ -50,14 +51,16 @@ async def async_setup_entry(  # Changed to async_setup_entry
         try:
             if is_binary_sensor(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 sensor = CleveroomBinarySensor(hass, device, client, gateway_id)
                 binary_sensors.append(sensor)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][sensor.unique_id] = sensor
         except Exception as e:
             _LOGGER.warning(
-                f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                f"Device data is incomplete, skip: {device.get('oid', 'unknow')}"
+                f", error message: {e}")
 
     async_add_entities(binary_sensors)
 
@@ -68,17 +71,22 @@ async def async_setup_entry(  # Changed to async_setup_entry
                     _LOGGER.info(f"add binary sensor new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     sensor = CleveroomBinarySensor(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [sensor], True), hass.loop)
+                        async_add_entities_wrapper(
+                            hass, async_add_entities, [sensor], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][sensor.unique_id] = sensor
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')},"
+                                f" error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 
@@ -86,6 +94,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
 
 
 class CleveroomBinarySensor(BinarySensorEntity):
+    """Representation of a  Binary Sensor."""
 
     def __init__(self, hass, device, client, gateway_id):
         self.hass = hass

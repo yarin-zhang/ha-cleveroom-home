@@ -43,7 +43,8 @@ async def async_setup_entry(  # Changed to async_setup_entry
         try:
             if is_cover(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 cover = CleveroomCover(hass, device, client, gateway_id)
                 covers.append(cover)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -61,7 +62,8 @@ async def async_setup_entry(  # Changed to async_setup_entry
                     _LOGGER.info(f"add cover new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     cover = CleveroomCover(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -71,7 +73,9 @@ async def async_setup_entry(  # Changed to async_setup_entry
             except KeyError as e:
                 _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 
@@ -190,7 +194,8 @@ class CleveroomCover(CoverEntity):
             if self.entity_id:
                 self.async_write_ha_state()
             else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
+                _LOGGER.warning(f"Entity {self._oid}{self.name} "
+                                f"not yet registered, skipping async_write_ha_state")
         except Exception as e:
             _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
 

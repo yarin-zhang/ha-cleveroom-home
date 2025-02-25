@@ -30,12 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 MIN_COLOR_TEMP_K = 2732
 MAX_COLOR_TEMP_K = 6024
 # Cleveroom system support color temperature list, 0-100 value means 2732-6024K color temperature
-COLOR_TEMP_LIST = [2732, 2747, 2762, 2778, 2793, 2809, 2825, 2841, 2857, 2874, 2890, 2907, 2924, 2941, 2959, 2976, 2994,
-                   3012, 3030, 3049, 3067, 3086, 3106, 3125, 3145, 3165, 3185, 3205, 3226, 3247, 3268, 3289, 3311, 3333,
-                   3356, 3378, 3401, 3425, 3448, 3472, 3497, 3521, 3546, 3571, 3597, 3623, 3650, 3676, 3704, 3731, 3759,
-                   3788, 3817, 3846, 3876, 3906, 3937, 3968, 4000, 4032, 4065, 4098, 4132, 4167, 4202, 4237, 4274, 4310,
-                   4348, 4386, 4425, 4464, 4505, 4545, 4587, 4630, 4673, 4717, 4762, 4808, 4854, 4902, 4950, 5000, 5051,
-                   5102, 5155, 5208, 5263, 5319, 5376, 5435, 5495, 5556, 5618, 5682, 5747, 5814, 5882, 5952, 6024]
+COLOR_TEMP_LIST = [2732, 2747, 2762, 2778, 2793, 2809, 2825, 2841, 2857,
+                   2874, 2890, 2907, 2924, 2941, 2959, 2976, 2994,
+                   3012, 3030, 3049, 3067, 3086, 3106, 3125, 3145, 3165,
+                   3185, 3205, 3226, 3247, 3268, 3289, 3311, 3333,
+                   3356, 3378, 3401, 3425, 3448, 3472, 3497, 3521, 3546,
+                   3571, 3597, 3623, 3650, 3676, 3704, 3731, 3759,
+                   3788, 3817, 3846, 3876, 3906, 3937, 3968, 4000, 4032,
+                   4065, 4098, 4132, 4167, 4202, 4237, 4274, 4310,
+                   4348, 4386, 4425, 4464, 4505, 4545, 4587, 4630, 4673,
+                   4717, 4762, 4808, 4854, 4902, 4950, 5000, 5051,
+                   5102, 5155, 5208, 5263, 5319, 5376, 5435, 5495, 5556,
+                   5618, 5682, 5747, 5814, 5882, 5952, 6024]
 
 
 async def async_setup_entry(
@@ -54,7 +60,8 @@ async def async_setup_entry(
         try:
             if is_light(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 light = CleveroomLight(hass, device, client, gateway_id)
                 lights.append(light)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -72,7 +79,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add light new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     light = CleveroomLight(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -80,9 +88,12 @@ async def async_setup_entry(
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][light.unique_id] = light
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')},"
+                                f" error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 

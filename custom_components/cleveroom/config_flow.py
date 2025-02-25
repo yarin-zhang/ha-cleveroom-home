@@ -7,9 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     DOMAIN,
@@ -118,10 +116,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.device_options = {}
             for device in self.discovered_devices:
-                if device["mac"] == '00-00-00-00-00-00' or device["mac"] == '00-00-00-00-00-01':
+                if (device["mac"] == '00-00-00-00-00-00'
+                        or device["mac"] == '00-00-00-00-00-01'):
                     self.device_options[device["mac"]] = f"{device['devName']}"
                 else:
-                    self.device_options[device["mac"]] = f"{device['devName']} ({device['ip']}:{device['localport']})"
+                    self.device_options[device["mac"]] = (f"{device['devName']} "
+                                                          f"({device['ip']}:{device['localport']})")
 
             return self.async_show_progress_done(next_step_id="device_picker")
 
@@ -140,24 +140,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         broadcast.init()
         discovered_devices = broadcast.search()
         # add a default device to the top
-        default_device1 = {'ip': '', 'devName': 'Next Step (Client)', 'localport': 4196, 'destport': 0,
-                           'groupip': '230.90.76.1', 'version': 'V1.587', 'mac': '00-00-00-00-00-01', 'sid': '',
+        default_device1 = {'ip': '', 'devName': 'Next Step (Client)',
+                           'localport': 4196, 'destport': 0,
+                           'groupip': '230.90.76.1', 'version': 'V1.587',
+                           'mac': '00-00-00-00-00-01', 'sid': '',
                            'workmodel': 1}
-        default_device2 = {'ip': '', 'devName': 'Next Step (Server)', 'localport': 4196, 'destport': 0,
-                           'groupip': '230.90.76.1', 'version': 'V1.587', 'mac': '00-00-00-00-00-00', 'sid': '',
+        default_device2 = {'ip': '', 'devName': 'Next Step (Server)',
+                           'localport': 4196, 'destport': 0,
+                           'groupip': '230.90.76.1', 'version': 'V1.587',
+                           'mac': '00-00-00-00-00-00', 'sid': '',
                            'workmodel': 0}
         discovered_devices.insert(0, default_device2)
         discovered_devices.insert(0, default_device1)
         return discovered_devices
 
-    async def async_step_device_picker(self, user_input: Optional[dict] = None) -> FlowResult:
+    async def async_step_device_picker(self,
+                                       user_input: Optional[dict] = None) -> FlowResult:
         """Show the device selection form."""
         errors = {}
 
         if user_input is not None:
             try:
                 self._selected_device = next(
-                    device for device in self.discovered_devices if device["mac"] == user_input["device"]
+                    device for device in self.discovered_devices
+                    if device["mac"] == user_input["device"]
                 )
                 return await self.async_step_config_options()
             except Exception:
@@ -175,7 +181,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_config_options(self, user_input: Optional[dict] = None) -> FlowResult:
+    async def async_step_config_options(self,
+                                        user_input: Optional[dict] = None) -> FlowResult:
         """Handle the configuration options step."""
         errors = {}
 
@@ -190,7 +197,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     **{'gateway_id': gateway_id, **user_input}
                 }
 
-                return self.async_create_entry(title=f"Cleveroom ({final_data['gateway_id']})", data=final_data)
+                return self.async_create_entry(title=f"Cleveroom ({final_data['gateway_id']})",
+                                               data=final_data)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -219,25 +227,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return vol.Schema(
                 {
                     vol.Required(CONF_GATEWAY_ID, default=default_values.get(CONF_GATEWAY_ID, "")): str,
-                    # vol.Required(CONF_GATEWAY_TYPE, default=default_values.get(CONF_GATEWAY_TYPE, 1)): vol.In(GATEWAY_TYPES),
                     vol.Required(CONF_HOST, default=default_values.get(CONF_HOST, "")): str,
                     vol.Required(CONF_PORT, default=default_values.get(CONF_PORT, DEFAULT_PORT)): int,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_SECURE_CODE): str,
                     vol.Required(CONF_AUTO_CREATE_AREA): vol.In(CREATE_AREA_OPTIONS),
-                    # vol.Required(CONF_SYSTEM_LEVEL): vol.In(SYSTEM_LEVEL_OPTIONS),
                 }
             )
         else:
             return vol.Schema(
                 {
                     vol.Required(CONF_GATEWAY_ID, default=default_values.get(CONF_GATEWAY_ID, "")): str,
-                    # vol.Required(CONF_GATEWAY_TYPE, default=default_values.get(CONF_GATEWAY_TYPE, 1)): vol.In(GATEWAY_TYPES),
                     vol.Required(CONF_HOST, default=default_values.get(CONF_HOST, "")): str,
                     vol.Required(CONF_PORT, default=default_values.get(CONF_PORT, DEFAULT_PORT)): int,
                     vol.Required(CONF_PASSWORD): str,
                     # vol.Optional(CONF_SECURE_CODE): str,
                     vol.Required(CONF_AUTO_CREATE_AREA): vol.In(CREATE_AREA_OPTIONS),
-                    # vol.Required(CONF_SYSTEM_LEVEL): vol.In(SYSTEM_LEVEL_OPTIONS),
                 }
             )

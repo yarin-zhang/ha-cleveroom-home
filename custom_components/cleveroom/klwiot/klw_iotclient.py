@@ -3,11 +3,9 @@ import socket
 import struct
 import threading
 import time
-from datetime import datetime, UTC
 import queue
 import logging
 import hashlib
-import uuid
 from typing import Union, List, Optional, Callable, Any, Coroutine
 
 from .klw_iotcontoller import KLWIOTController

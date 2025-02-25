@@ -5,8 +5,10 @@ For more detailed information, please refer to: https://www.cleveroom.com
 import asyncio
 from typing import cast
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity, AlarmControlPanelState
-from homeassistant.components.alarm_control_panel.const import AlarmControlPanelEntityFeature, CodeFormat
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity, AlarmControlPanelState)
+from homeassistant.components.alarm_control_panel.const import (
+    AlarmControlPanelEntityFeature, CodeFormat)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import translation
 from homeassistant.helpers.entity import DeviceInfo
@@ -16,7 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 import logging
 
-from . import DOMAIN, KLWIOTClient, ENTITY_REGISTRY, get_translation, is_alarm_control_panel, generate_object_id
+from . import (DOMAIN, KLWIOTClient, ENTITY_REGISTRY,
+               get_translation, is_alarm_control_panel, generate_object_id)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +60,8 @@ async def async_setup_entry(
             except KeyError as e:
                 _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
-                                         update_before_add: bool = False):
+    async def async_add_entities_wrapper(hass, async_add_entities, entities,
+                                         update_before_add = False):
         async_add_entities(entities, update_before_add)
 
     client.on("on_device_change", async_device_discovered)

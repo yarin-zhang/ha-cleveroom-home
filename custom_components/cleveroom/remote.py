@@ -97,7 +97,8 @@ async def async_setup_entry(
         try:
             if device["detail"]["category"] == DeviceType.TOGGLE:  #
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 player = CleveroomRemote(hass, device, client, gateway_id)
                 remotes.append(player)
 
@@ -169,7 +170,8 @@ class CleveroomRemote(RemoteEntity):
             if single_command in self._commands:
                 try:
                     ir_code = self._commands[single_command]
-                    self._client.controller.control("SendRCKey", [{"oid": self._oid, "value": int(ir_code)}])
+                    self._client.controller.control(
+                        "SendRCKey", [{"oid": self._oid, "value": int(ir_code)}])
                     _LOGGER.info(f"发送命令: {single_command}")
                 except Exception as e:
                     _LOGGER.error(f"发送命令失败: {e}")
@@ -196,6 +198,7 @@ class CleveroomRemote(RemoteEntity):
             if self.entity_id:
                 self.async_write_ha_state()
             else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
+                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
+                                f"skipping async_write_ha_state")
         except Exception as e:
             _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

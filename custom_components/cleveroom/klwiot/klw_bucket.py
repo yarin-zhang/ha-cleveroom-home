@@ -3,10 +3,8 @@ from .klw_common import byte2bits, bit2byte
 from .klw_type import BufferType
 from .klw_type import DeviceType
 from .klw_nameprovider import *
-import asyncio
 import aiofiles
 import json
-import logging
 
 
 class BucketDataManager:
@@ -65,7 +63,6 @@ class DeviceBucket:
         self._bucket.clear()
         if self.persistence:
             if self._bucket_data_manager:
-                # asyncio.run_coroutine_threadsafe(self.async_save_data(), self._hass.loop)
                 if self._data_changed_callback:
                     self._data_changed_callback()
 

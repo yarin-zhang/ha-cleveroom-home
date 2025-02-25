@@ -7,12 +7,11 @@ from typing import cast
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import translation
 
 import logging
-from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, get_translation
+from . import (DOMAIN, ENTITY_REGISTRY, KLWIOTClient,
+               DeviceType, get_translation)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,9 @@ class ReloadIntegrationButton(ButtonEntity):
 
     def __init__(self, hass, client, entry, gateway_id) -> None:
         self._hass = hass
-        self._attr_name = get_translation(hass, "reload_integration", "Reload Cleveroom Integration")
+        self._attr_name = get_translation(hass,
+                                          "reload_integration",
+                                          "Reload Cleveroom Integration")
         self._attr_unique_id = f"cleveroom_rediscover.{gateway_id}"
         self.entity_id = f"button.cleveroom_rediscover.{gateway_id}"
         self._client = cast(KLWIOTClient, client)
@@ -58,7 +59,9 @@ class ReloadIntegrationButton(ButtonEntity):
 class QueryStatusButton(ButtonEntity):
     def __init__(self, hass, client, gateway_id) -> None:
         self._hass = hass
-        self._attr_name = get_translation(hass, "search_devices", "Search Cleveroom Gateway Devices")
+        self._attr_name = get_translation(hass,
+                                          "search_devices",
+                                          "Search Cleveroom Gateway Devices")
         self._attr_unique_id = f"cleveroom_query.{gateway_id}"
         self.entity_id = f"button.cleveroom_query.{gateway_id}"
         self._client = cast(KLWIOTClient, client)
@@ -75,7 +78,9 @@ class QueryStatusButton(ButtonEntity):
 class ClearCacheButton(ButtonEntity):
     def __init__(self, hass, client, gateway_id) -> None:
         self._hass = hass
-        self._attr_name = get_translation(hass, "clear_cache", "Clear Cleveroom Gateway Cache")
+        self._attr_name = get_translation(hass,
+                                          "clear_cache",
+                                          "Clear Cleveroom Gateway Cache")
         self._attr_unique_id = f"cleveroom_cleancache.{gateway_id}"  # 按钮唯一ID
         self.entity_id = f"button.cleveroom_cleancache.{gateway_id}"
         self._client = cast(KLWIOTClient, client)

@@ -39,7 +39,8 @@ async def async_setup_entry(
         try:
             if is_switch(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 toggle = CleveroomSwitch(hass, device, client, gateway_id)
                 switches.append(toggle)
 
@@ -58,7 +59,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add switch new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     toggle = CleveroomSwitch(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -66,9 +68,12 @@ async def async_setup_entry(
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][toggle.unique_id] = toggle
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, "
+                                f"error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 

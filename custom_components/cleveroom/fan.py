@@ -41,7 +41,8 @@ async def async_setup_entry(
         try:
             if is_fan(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 ventilation = CleveroomFan(hass, device, client, gateway_id)
                 ventilations.append(ventilation)
 
@@ -49,7 +50,8 @@ async def async_setup_entry(
                 ENTITY_REGISTRY[entry.entry_id][ventilation.unique_id] = ventilation
         except Exception as e:
             _LOGGER.warning(
-                f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, "
+                f"error message: {e}")
 
     async_add_entities(ventilations)
 
@@ -60,7 +62,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add ventilation new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     ventilation = CleveroomFan(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -68,9 +71,12 @@ async def async_setup_entry(
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][ventilation.unique_id] = ventilation
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, "
+                                f"error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 
@@ -110,7 +116,9 @@ class CleveroomFan(FanEntity):
             model="Generic",
         )
         self._attr_supported_features = (
-                FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF | FanEntityFeature.SET_SPEED
+                FanEntityFeature.TURN_ON |
+                FanEntityFeature.TURN_OFF |
+                FanEntityFeature.SET_SPEED
         )
         self._attr_speed_count = 3
 
@@ -150,8 +158,10 @@ class CleveroomFan(FanEntity):
     def device_info(self) -> DeviceInfo:
         return self._attr_device_info
 
-    async def async_turn_on(self, speed: Optional[str] = None, percentage: Optional[int] = None,
-                            preset_mode: Optional[str] = None, **kwargs: Any) -> None:
+    async def async_turn_on(self, speed: Optional[str] = None,
+                            percentage: Optional[int] = None,
+                            preset_mode: Optional[str] = None,
+                            **kwargs: Any) -> None:
         """Turn the ventilation on."""
         _LOGGER.debug(f"Turning on ventilation {self._oid}")
         try:
@@ -187,7 +197,8 @@ class CleveroomFan(FanEntity):
                 cleveroom_speed = 2
             if not self._is_on:
                 await self.async_turn_on()
-            self._client.controller.control("SetSpeed", [{"oid": self._oid, "value": cleveroom_speed}])
+            self._client.controller.control(
+                "SetSpeed", [{"oid": self._oid, "value": cleveroom_speed}])
             # 判断是否打开
             self._speed = cleveroom_speed
             self.async_write_ha_state()
@@ -205,6 +216,7 @@ class CleveroomFan(FanEntity):
             if self.entity_id:
                 self.async_write_ha_state()
             else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
+                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
+                                f"skipping async_write_ha_state")
         except Exception as e:
             _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

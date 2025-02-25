@@ -15,9 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import translation
-from homeassistant.helpers.config_validation import language
 
-from .klwiot import KLWIOTClientLC, KLWIOTClient, KLWBroadcast, DeviceType, has_method, BucketDataManager
+from .klwiot import (KLWIOTClientLC, KLWIOTClient, KLWBroadcast, DeviceType, has_method
+, BucketDataManager)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "cleveroom"
@@ -55,9 +55,10 @@ SYSTEM_LEVEL_OPTIONS = {
 DEFAULT_PORT = 4196
 DEFAULT_SCAN_INTERVAL = 30
 
-# leveroom has implemented most platforms, but the "remote" platform is poorly supported, so integration is paused.
-PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan", "button", "alarm_control_panel",
-             "scene", "media_player"]
+# leveroom has implemented most platforms, but the "remote" platform is poorly supported,
+# so integration is paused.
+PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan"
+    , "button", "alarm_control_panel","scene", "media_player"]
 # PLATFORMS = ["binary_sensor","button"]
 ENTITY_REGISTRY = {}
 
@@ -75,7 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await translation.async_load_integrations(hass, {DOMAIN})
 
     _LOGGER.info(
-        f"Initialize Cleveroom Gateway：{gateway_id}，type：{GATEWAY_TYPES[gateway_type]}，address：{host}:{port} language:{language}")
+        f"Initialize Cleveroom Gateway：{gateway_id}，"
+        f"type：{GATEWAY_TYPES[gateway_type]}，address：{host}:{port} language:{language}")
     # zh-Hans
 
     file_path = f'./{gateway_id}.json'  # Construct the file path
@@ -85,7 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def data_changed_callback():
         """Callback to save data when it changes."""
         if device_bucket:
-            asyncio.run_coroutine_threadsafe(bucket_data_manager.async_save_data(device_bucket.get_bucket()), hass.loop)
+            asyncio.run_coroutine_threadsafe(
+                bucket_data_manager.async_save_data(device_bucket.get_bucket()), hass.loop)
 
     client = None
     if gateway_type == GATEWAY_TYPE_SERVER:
@@ -138,8 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "devices": [],
     }
 
-    connect_result = await hass.async_add_executor_job(client.connect)
-    if not connect_result:
+    # connect_result = await hass.async_add_executor_job(client.connect)
+    if not await hass.async_add_executor_job(client.connect):
         _LOGGER.error("Cleveroom connect failure")
         return False
     await discover_cleveroom_devices(hass, entry, client)
@@ -169,20 +172,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-def get_translation(hass: HomeAssistant, key: str, default: str) -> str:
+def get_translation(hass: HomeAssistant, key: str, default_value) -> str:
+    """
+    Get the translation for a given key.
+    """
     language = hass.config.language
     translations = translation.async_get_cached_translations(
         hass, language, DOMAIN
     )
-    return translations.get(f"component.{DOMAIN}.cleveroom.{key}", str)
+    return translations.get(f"component.{DOMAIN}.cleveroom.{key}", default_value)
 
 
-async def discover_cleveroom_devices(hass: HomeAssistant, entry: ConfigEntry, client: KLWIOTClient):  # 接受 entry 参数
+async def discover_cleveroom_devices(hass: HomeAssistant, entry: ConfigEntry, client: KLWIOTClient):
     """Discover Cleveroom devices."""
     _LOGGER.info("discover_ Cleveroom devices...")
     try:
         await asyncio.sleep(5)  # waiting 5s
-        devices = client.devicebucket.get_bucket_values()  # Not all devices in the bucket are supported. ！！！
+        # Not all devices in the bucket are supported. ！！！
+        devices = client.devicebucket.get_bucket_values()
         _LOGGER.debug(f"Discovered {len(devices)} devices")
         # Save devices to hass.data
         hass.data[DOMAIN][entry.entry_id]["devices"] = devices
@@ -193,18 +200,30 @@ async def discover_cleveroom_devices(hass: HomeAssistant, entry: ConfigEntry, cl
 
 
 def on_login_success():
+    """
+    Cleveroom Login Success
+    """
     _LOGGER.info("Cleveroom Login Succcess")
 
 
 def on_login_failed():
+    """
+    Cleveroom Login Failed
+    """
     _LOGGER.error("Cleveroom Login Failure")
 
 
 def on_connect_change(state):
+    """
+    Cleveroom Connect State Change
+    """
     _LOGGER.info(f"Cleveroom connect state Change to: {state}")
 
 
 def on_device_change_wrapper(hass: HomeAssistant, entry: ConfigEntry):
+    """
+    Cleveroom Device Change
+    """
     def on_device_change(device, is_new):
         oid = device.get("oid")
         entity = ENTITY_REGISTRY.get(entry.entry_id, {}).get(oid)
@@ -218,7 +237,9 @@ def on_device_change_wrapper(hass: HomeAssistant, entry: ConfigEntry):
     return on_device_change
 
 
-async def device_registry_area_update(floor_registry, area_registry, device_registry, entry, device):
+async def device_registry_area_update(
+        floor_registry, area_registry, device_registry, entry, device):
+    """Update the area of the device."""
     floor_name = device["detail"].get("fName", "")
     room_name = device["detail"].get("rName", "")
     device_name = device["detail"].get("dName", "")
@@ -231,12 +252,12 @@ async def device_registry_area_update(floor_registry, area_registry, device_regi
         floor_area = floor_registry.async_get_floor_by_name(floor_name)
         if floor_area is None:
             floor_area = floor_registry.async_create(name=floor_name, level=fid)
-            _LOGGER.info(f"Create floor area: {floor_name}")
+            _LOGGER.info("Create floor area: %s",floor_name)
 
         room_area = area_registry.async_get_area_by_name(room_name)
         if room_area is None:
             room_area = area_registry.async_create(name=room_name, floor_id=floor_area.floor_id)
-            _LOGGER.info(f"Create room area: {room_name}")
+            _LOGGER.info("Create room area: %s",room_name)
 
         # binding area and floor
         area_registry.async_update(
@@ -275,7 +296,7 @@ def is_sensor(device):
     detail = device["detail"]
     category = detail["category"]
     twoside = detail.get("twoside", False)
-    return category == DeviceType.SENSOR and twoside == False
+    return category == DeviceType.SENSOR and twoside is False
 
 
 def is_climate(device):
@@ -299,7 +320,7 @@ def is_binary_sensor(device):
     category = detail["category"]
     twoside = detail.get("twoside", False)
     is_binary = twoside or category == DeviceType.DRY
-    return (category == DeviceType.SENSOR or category == DeviceType.DRY) and is_binary
+    return (category in (DeviceType.SENSOR,DeviceType.DRY)) and is_binary
 
 
 def is_fan(device):
@@ -333,6 +354,9 @@ def is_heater(device):
 
 
 def generate_object_id(gateway_id: str, oid: str) -> str:
+    """
+    Generate a unique object ID for the entity.
+    """
     object_id = f"entity_{oid.lower().replace("-", "_").replace(".", "_")}"
     object_id = re.sub(r'[^a-z0-9_]', '', object_id)
     return object_id

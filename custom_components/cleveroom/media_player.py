@@ -22,15 +22,17 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 
-from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_media_player, \
-    generate_object_id
+from . import (DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType,
+               device_registry_area_update, is_media_player,
+    generate_object_id)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_SOURCES = ["AU1", "TF", "AU2", "FM"]
 SOURCE_MAP = {1: "AU1", 2: "TF", 3: "AU2", 4: "FM"}
 
-SUPPORTED_TF_FOLDERS = ["Root", "1#Folder", "2#Folder", "3#Folder", "4#Folder", "5#Folder", "6#Folder"]
+SUPPORTED_TF_FOLDERS = ["Root", "1#Folder", "2#Folder", "3#Folder",
+                        "4#Folder", "5#Folder", "6#Folder"]
 
 
 async def async_setup_entry(
@@ -52,7 +54,8 @@ async def async_setup_entry(
         try:
             if is_media_player(device):
                 if auto_area == 1:
-                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                    await device_registry_area_update(
+                        floor_registry, area_registry, device_registry, entry, device)
                 player = CleveroomMediaPlayer(hass, device, client, gateway_id)
                 media_players.append(player)
 
@@ -71,7 +74,8 @@ async def async_setup_entry(
                     _LOGGER.info(f"add music player new devices: {device['oid']}")
                     if auto_area == 1:
                         asyncio.run_coroutine_threadsafe(
-                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            device_registry_area_update(
+                                floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
                     player = CleveroomMediaPlayer(hass, device, client, gateway_id)
                     asyncio.run_coroutine_threadsafe(
@@ -79,9 +83,12 @@ async def async_setup_entry(
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][player.unique_id] = player
             except KeyError as e:
-                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')},"
+                                f" error message: {e}")
 
-    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+    async def async_add_entities_wrapper(hass: HomeAssistant,
+                                         async_add_entities: AddEntitiesCallback,
+                                         entities: list,
                                          update_before_add: bool = False):
         async_add_entities(entities, update_before_add)
 
@@ -195,7 +202,8 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
         """set volume level."""
         vol = int(volume * 100)
         try:
-            self._client.controller.control("SetVolume", [{"oid": self._oid, "value": vol}])
+            self._client.controller.control(
+                "SetVolume", [{"oid": self._oid, "value": vol}])
             self._volume = volume
             self.async_write_ha_state()
         except Exception as e:
@@ -211,7 +219,8 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
         if source in SUPPORTED_SOURCES:
             chl = list(SOURCE_MAP.keys())[list(SOURCE_MAP.values()).index(source)]
             try:
-                self._client.controller.control("SetSource", [{"oid": self._oid, "value": chl}])
+                self._client.controller.control(
+                    "SetSource", [{"oid": self._oid, "value": chl}])
                 self._source = source
                 self.async_write_ha_state()
             except Exception as e:
@@ -224,7 +233,8 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
         if self._source == "TF" and sound_mode in SUPPORTED_TF_FOLDERS:
             try:
                 idx = SUPPORTED_TF_FOLDERS.index(sound_mode)
-                self._client.controller.control("SetSongFolder", [{"oid": self._oid, "value": idx}])
+                self._client.controller.control(
+                    "SetSongFolder", [{"oid": self._oid, "value": idx}])
                 self._attr_current_sound_mode = sound_mode
                 self.async_write_ha_state()
             except Exception as e:
@@ -288,6 +298,7 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
             if self.entity_id:
                 self.async_write_ha_state()
             else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
+                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
+                                f"skipping async_write_ha_state")
         except Exception as e:
             _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
