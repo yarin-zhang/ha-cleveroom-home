@@ -1,0 +1,147 @@
+"""
+Cleveroom integration for Home Assistant - Switch
+For more detailed information, please refer to: https://www.cleveroom.com
+"""
+import asyncio
+import logging
+from typing import cast
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import floor_registry as fr
+from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import device_registry as dr
+from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_switch, \
+    generate_object_id
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+) -> None:
+    gateway_data = hass.data[DOMAIN][entry.entry_id]
+    devices = gateway_data["devices"]
+    client = gateway_data["client"]
+    gateway_id = gateway_data["gateway_id"]
+    auto_area = gateway_data["auto_area"]
+    floor_registry = fr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+    switches = []
+    for device in devices:
+        try:
+            if is_switch(device):
+                if auto_area == 1:
+                    await device_registry_area_update(floor_registry, area_registry, device_registry, entry, device)
+                toggle = CleveroomSwitch(hass, device, client, gateway_id)
+                switches.append(toggle)
+
+                ENTITY_REGISTRY.setdefault(entry.entry_id, {})
+                ENTITY_REGISTRY[entry.entry_id][toggle.unique_id] = toggle
+        except Exception as e:
+            _LOGGER.warning(
+                f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+
+    async_add_entities(switches)
+
+    def async_device_discovered(device, is_new):
+        if is_new:
+            try:
+                if is_switch(device):
+                    _LOGGER.info(f"add switch new devices: {device['oid']}")
+                    if auto_area == 1:
+                        asyncio.run_coroutine_threadsafe(
+                            device_registry_area_update(floor_registry, area_registry, device_registry, entry, device),
+                            hass.loop)
+                    toggle = CleveroomSwitch(hass, device, client, gateway_id)
+                    asyncio.run_coroutine_threadsafe(
+                        async_add_entities_wrapper(hass, async_add_entities, [toggle], True), hass.loop)
+                    ENTITY_REGISTRY.setdefault(entry.entry_id, {})
+                    ENTITY_REGISTRY[entry.entry_id][toggle.unique_id] = toggle
+            except KeyError as e:
+                _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}")
+
+    async def async_add_entities_wrapper(hass: HomeAssistant, async_add_entities: AddEntitiesCallback, entities: list,
+                                         update_before_add: bool = False):
+        async_add_entities(entities, update_before_add)
+
+    client.on("on_device_change", async_device_discovered)
+
+
+class CleveroomSwitch(SwitchEntity):
+
+    def __init__(self, hass, device, client, gateway_id):
+        self.hass = hass
+        self._device = device
+        self._oid = device["oid"]
+        self._client = cast(KLWIOTClient, client)
+
+        detail = device["detail"]
+        fName = detail.get("fName", "")
+        rName = detail.get("rName", "")
+        dName = detail.get("dName", "")
+
+        self._full_name = f"{fName} {rName} {dName}".strip()
+        self._object_id = generate_object_id(gateway_id, self._oid)
+        self.entity_id = f"switch.{self._object_id}"
+
+        self._name = self._full_name
+        self._is_on = False
+        self.init_or_update_entity_state(device)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._oid)},
+            name=self._name,
+            manufacturer="Cleveroom",
+            model=self._device["detail"].get("model", "Generic"),
+
+        )
+
+    def init_or_update_entity_state(self, device):
+
+        self._device = device
+        detail = device["detail"]
+
+        self._is_on = detail.get("on", self._is_on)
+
+    @property
+    def unique_id(self) -> str:
+        return self._oid
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def is_on(self) -> bool:
+        return self._is_on
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return self._attr_device_info
+
+    async def async_turn_on(self, **kwargs):
+        self._client.controller.control("DeviceOn", [{"oid": self._oid}])
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        self._client.controller.control("DeviceOff", [{"oid": self._oid}])
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        device = self._client.devicebucket.get_device_from_database(self._oid)
+        if device is None:
+            _LOGGER.error(f"Device not found: {self._oid}")
+            return
+        self.init_or_update_entity_state(device)
+        if self.entity_id:
+            self.async_write_ha_state()
+        else:
+            _LOGGER.warning(f"Entity {self.name} not yet registered, skipping async_write_ha_state")

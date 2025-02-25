@@ -1,0 +1,13 @@
+{
+  "domain": "cleveroom",
+  "name": "Cleveroom",
+  "dependencies": [],
+  "codeowners": [
+    "@cleveroom"
+  ],
+  "requirements": [
+  ],
+  "iot_class": "local_polling",
+  "version": "1.0.0",
+  "config_flow": true
+}

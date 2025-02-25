@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cleveroom Gateway",
+        "data": {
+          "gateway_id": "Gateway ID",
+          "gateway_type": "Gateway Mode",
+          "host": "Host",
+          "port": "Port",
+          "password": "Password",
+          "secure_code": "Secure Code",
+          "auto_create_area": "Auto Generate Area",
+          "system_level": "System Scale (Sub-device Quantity)"
+        }
+      },
+      "discovery": {
+        "title": "Discovering Gateway Devices",
+        "description": "Set up your Cleveroom Gateway"
+      },
+      "device_picker": {
+        "title": "Select Cleveroom Gateway",
+        "data": {
+          "device": "Device List"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unknown error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Cleveroom Options"
+      }
+    }
+  },
+  "cleveroom": {
+    "clear_cache": "Clear Cleveroom Gateway Cache",
+    "search_devices": "Search Cleveroom Gateway Devices",
+    "reload_integration": "Reload Cleveroom Integration",
+    "security_system_title": "Cleveroom Security System"
+  }
+}

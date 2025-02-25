@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "配置 Cleveroom 网关",
+        "data": {
+          "gateway_id": "网关 ID",
+          "gateway_type": "网关类型",
+          "host": "主机",
+          "port": "端口",
+          "password": "密码",
+          "secure_code": "校验码",
+          "auto_create_area": "自动创建区域",
+          "system_level": "系统规模(子设备数量级)"
+        }
+      },
+      "discovery": {
+        "title": "正在发现网关设备",
+        "description": "设置您的 Cleveroom 网关"
+      },
+      "device_picker": {
+        "title": "选择 Cleveroom 网关",
+        "data": {
+          "device": "设备列表"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接",
+      "invalid_auth": "无效的认证",
+      "unknown": "未知错误"
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Cleveroom 设置"
+        }
+      }
+    }
+  },
+  "cleveroom": {
+    "clear_cache": "清除科力屋网关设备缓存",
+    "search_devices": "搜索科力屋网关设备列表",
+    "reload_integration": "重新加载科力屋集成插件"
+  }
+}

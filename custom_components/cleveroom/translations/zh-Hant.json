@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "配置 Cleveroom 網關",
+        "data": {
+          "gateway_id": "網關 ID",
+          "gateway_type": "網關類型",
+          "host": "主機",
+          "port": "端口",
+          "password": "密碼",
+          "secure_code": "校驗碼",
+          "auto_create_area": "自動創建區域",
+          "system_level": "系統規模(子設備數量級)"
+        }
+      },
+      "discovery": {
+        "title": "正在發現網關設備",
+        "description": "設置您的 Cleveroom 網關"
+      },
+      "device_picker": {
+        "title": "選擇 Cleveroom 網關",
+        "data": {
+          "device": "設備列表"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "無法連接",
+      "invalid_auth": "無效的認證",
+      "unknown": "未知錯誤"
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Cleveroom 設置"
+        }
+      }
+    }
+  },
+  "cleveroom": {
+    "clear_cache": "清除科力屋網關設備快取",
+    "search_devices": "搜索科力屋網關設備列表",
+    "reload_integration": "重新載入科力屋集成插件"
+  }
+}
