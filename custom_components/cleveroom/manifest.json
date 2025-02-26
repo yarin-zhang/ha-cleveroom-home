@@ -3,7 +3,7 @@
   "name": "Cleveroom",
   "dependencies": [],
   "codeowners": [
-    "@cleveroom"
+    "@cleveroom-code"
   ],
   "requirements": [
     "aiofiles==24.1.0",
