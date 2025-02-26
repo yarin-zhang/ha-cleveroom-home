@@ -1,6 +1,8 @@
 {
   "domain": "cleveroom",
   "name": "Cleveroom",
+   "documentation": "https://github.com/cleveroom-code/ha-cleveroom-home",
+  "issue_tracker": "https://github.com/cleveroom-code/ha-cleveroom-home/issues",
   "dependencies": [],
   "codeowners": [
     "@cleveroom-code"
