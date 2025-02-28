@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -260,10 +260,8 @@ def get_random_code(length):
     code = [random.randint(0, 255) for _ in range(length)]
     return code
 
-
 def get_current_time():
-    return datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')
-
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 def safe_merge_objects(ori_obj, change_obj):
     """

@@ -6,6 +6,7 @@ import hashlib
 import base64
 import hmac
 from typing import Union, Optional
+from . import utils
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 

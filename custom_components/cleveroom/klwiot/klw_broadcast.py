@@ -111,7 +111,7 @@ class KLWBroadcast(metaclass=Singleton):
 
         # Wait to receive response
         start_time = time.time()
-        while time.time() - start_time < 5:  # 5 second timeout
+        while time.time() - start_time < 4:  # 5 second timeout
             try:
                 data, addr = self.udp_client.recvfrom(1024)
                 info = self.get_udp_info(data, addr)
@@ -119,6 +119,7 @@ class KLWBroadcast(metaclass=Singleton):
                 if self.listener:
                     self.listener(info)
             except BlockingIOError:
+                # print("Blocking Socket timeout.")
                 pass
                 # time.sleep(0.1)  # Short sleep to avoid excessive CPU usage
             except Exception as e:

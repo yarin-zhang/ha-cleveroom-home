@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 import voluptuous as vol
-
+from homeassistant import core
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
@@ -127,15 +127,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_progress(
             step_id='discovery',
-            progress_task=self._discovery_task,  # type: ignore
+            progress_task=self._discovery_task,
             progress_action="discovering",
         )
 
     async def _async_discover_devices(self):
         """Discover devices."""
-        await asyncio.sleep(5)  # Simulate device discovery
-
-        # Replace this with your actual device discovery code
+        await asyncio.sleep(1)
         broadcast = KLWBroadcast()
         broadcast.init()
         discovered_devices = broadcast.search()

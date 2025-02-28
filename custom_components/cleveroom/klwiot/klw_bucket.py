@@ -3,6 +3,9 @@ from .klw_common import byte2bits, bit2byte
 from .klw_type import BufferType
 from .klw_type import DeviceType
 from .klw_nameprovider import *
+
+from . import utils
+
 import aiofiles
 import json
 

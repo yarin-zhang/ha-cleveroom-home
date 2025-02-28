@@ -8,9 +8,8 @@
     "@cleveroom-code"
   ],
   "requirements": [
-    "aiofiles==24.1.0",
-    "cryptography==44.0.0",
-    "voluptuous==0.15.2"
+    "aiofiles",
+    "cryptography"
   ],
   "iot_class": "local_polling",
   "version": "1.0.0",

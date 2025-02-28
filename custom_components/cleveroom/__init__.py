@@ -357,6 +357,7 @@ def generate_object_id(gateway_id: str, oid: str) -> str:
     """
     Generate a unique object ID for the entity.
     """
-    object_id = f"entity_{oid.lower().replace("-", "_").replace(".", "_")}"
+    # object_id = f"entity_{oid.lower().replace("-", "_").replace(".", "_")}"
+    object_id = "entity_{}".format(oid.lower().replace("-", "_").replace(".", "_"))
     object_id = re.sub(r'[^a-z0-9_]', '', object_id)
     return object_id
