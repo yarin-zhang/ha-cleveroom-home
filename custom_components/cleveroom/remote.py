@@ -99,7 +99,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                player = CleveroomRemote(hass, device, client, gateway_id)
+                player = CleveroomRemote(hass, device, client, gateway_id,auto_area)
                 remotes.append(player)
 
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -113,7 +113,7 @@ async def async_setup_entry(
 
 class CleveroomRemote(RemoteEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
 
         self.hass = hass
         self._device = device
@@ -136,12 +136,13 @@ class CleveroomRemote(RemoteEntity):
         self._activity_list = list(LANGUANG_RC.keys())
         self._target_entity = detail.get(CONF_TARGET_ENTITY)
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._name,
-            manufacturer="Cleveroom",
-            model="Generic",
-        )
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._name,
+                manufacturer="Cleveroom",
+                model="Generic",
+            )
 
     def init_or_update_entity_state(self, device):
         self._device = device

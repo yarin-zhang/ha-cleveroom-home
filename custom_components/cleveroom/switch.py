@@ -41,7 +41,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                toggle = CleveroomSwitch(hass, device, client, gateway_id)
+                toggle = CleveroomSwitch(hass, device, client, gateway_id,auto_area)
                 switches.append(toggle)
 
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -62,7 +62,7 @@ async def async_setup_entry(
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    toggle = CleveroomSwitch(hass, device, client, gateway_id)
+                    toggle = CleveroomSwitch(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [toggle], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 class CleveroomSwitch(SwitchEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
         self.hass = hass
         self._device = device
         self._oid = device["oid"]
@@ -101,13 +101,14 @@ class CleveroomSwitch(SwitchEntity):
         self._is_on = False
         self.init_or_update_entity_state(device)
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._name,
-            manufacturer="Cleveroom",
-            model=self._device["detail"].get("model", "Generic"),
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._name,
+                manufacturer="Cleveroom",
+                model=self._device["detail"].get("model", "Generic"),
 
-        )
+            )
 
     def init_or_update_entity_state(self, device):
 

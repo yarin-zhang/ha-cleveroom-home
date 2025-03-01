@@ -62,7 +62,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                light = CleveroomLight(hass, device, client, gateway_id)
+                light = CleveroomLight(hass, device, client, gateway_id,auto_area)
                 lights.append(light)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][light.unique_id] = light
@@ -82,7 +82,7 @@ async def async_setup_entry(
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    light = CleveroomLight(hass, device, client, gateway_id)
+                    light = CleveroomLight(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [light], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -102,7 +102,7 @@ async def async_setup_entry(
 
 class CleveroomLight(LightEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
         self.hass = hass
         self._device = device
         self._oid = device["oid"]
@@ -147,14 +147,13 @@ class CleveroomLight(LightEntity):
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._full_name,
-            manufacturer="Cleveroom",
-            model="Generic"
-
-        )
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._full_name,
+                manufacturer="Cleveroom",
+                model="Generic"
+            )
 
     def init_or_update_entity_state(self, device):
 

@@ -42,7 +42,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                scene = CleveroomScene(hass, device, client, gateway_id)
+                scene = CleveroomScene(hass, device, client, gateway_id,auto_area)
                 scenes.append(scene)
 
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -63,7 +63,7 @@ async def async_setup_entry(
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    scene = CleveroomScene(hass, device, client, gateway_id)
+                    scene = CleveroomScene(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [scene], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -84,7 +84,7 @@ async def async_setup_entry(
 class CleveroomScene(Scene):
     """Representation of a Cleveroom Scene."""
 
-    def __init__(self, hass, device, client, gateway_id) -> None:
+    def __init__(self, hass, device, client, gateway_id,auto_area) -> None:
         """Initialize the scene."""
         self._hass = hass
         self._client = cast(KLWIOTClient, client)
@@ -107,11 +107,14 @@ class CleveroomScene(Scene):
 
         self._name = self._full_name
         self._hass = hass
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._full_name,
-            manufacturer="Cleveroom",
-        )
+
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._full_name,
+                manufacturer="Cleveroom",
+                model="Generic"
+            )
 
     def init_or_update_entity_state(self, device):
         # scene not support state

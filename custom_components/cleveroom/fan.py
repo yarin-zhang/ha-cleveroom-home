@@ -43,7 +43,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                ventilation = CleveroomFan(hass, device, client, gateway_id)
+                ventilation = CleveroomFan(hass, device, client, gateway_id,auto_area)
                 ventilations.append(ventilation)
 
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -65,7 +65,7 @@ async def async_setup_entry(
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    ventilation = CleveroomFan(hass, device, client, gateway_id)
+                    ventilation = CleveroomFan(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [ventilation], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -86,7 +86,7 @@ async def async_setup_entry(
 class CleveroomFan(FanEntity):
     """Representation of a Cleveroom ventilation device."""
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
         """Initialize the ventilation device."""
         self.hass = hass
         self._device = device
@@ -109,18 +109,20 @@ class CleveroomFan(FanEntity):
 
         self._attr_speed_count = 3  #
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._full_name,
-            manufacturer="Cleveroom",
-            model="Generic",
-        )
+
         self._attr_supported_features = (
                 FanEntityFeature.TURN_ON |
                 FanEntityFeature.TURN_OFF |
                 FanEntityFeature.SET_SPEED
         )
         self._attr_speed_count = 3
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._full_name,
+                manufacturer="Cleveroom",
+                model="Generic",
+            )
 
         self.init_or_update_entity_state(device)
 

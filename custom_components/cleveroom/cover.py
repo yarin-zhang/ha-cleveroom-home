@@ -45,7 +45,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                cover = CleveroomCover(hass, device, client, gateway_id)
+                cover = CleveroomCover(hass, device, client, gateway_id,auto_area)
                 covers.append(cover)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][cover.unique_id] = cover
@@ -65,7 +65,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    cover = CleveroomCover(hass, device, client, gateway_id)
+                    cover = CleveroomCover(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [cover], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -84,7 +84,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
 
 class CleveroomCover(CoverEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
         self.hass = hass
         self._device = device
         self._oid = device["oid"]
@@ -115,14 +115,14 @@ class CleveroomCover(CoverEntity):
                 | CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.STOP
         )
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._full_name,
+                manufacturer="Cleveroom",
+                model="Generic"
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._full_name,
-            manufacturer="Cleveroom",
-            model="Generic"
-
-        )
+            )
 
     def init_or_update_entity_state(self, device):
 

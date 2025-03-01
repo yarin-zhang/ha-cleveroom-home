@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import translation
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .klwiot import (KLWIOTClientLC, KLWIOTClient, KLWBroadcast, DeviceType, has_method
 , BucketDataManager)
@@ -28,7 +29,7 @@ CONF_DISCOVERED_DEVICES = "discovered_devices"
 CONF_SYSTEM_LEVEL = "system_level"
 CONF_AUTO_CREATE_AREA = "auto_create_area"
 CONF_SECURE_CODE = "secure_code"
-# gateway work mode
+# gateway.py work mode
 GATEWAY_TYPE_SERVER = 0
 GATEWAY_TYPE_CLIENT = 1
 
@@ -57,13 +58,14 @@ DEFAULT_SCAN_INTERVAL = 30
 
 # leveroom has implemented most platforms, but the "remote" platform is poorly supported,
 # so integration is paused.
-PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan"
-    , "button", "alarm_control_panel","scene", "media_player"]
-# PLATFORMS = ["binary_sensor","button"]
+# PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan"
+#     , "button", "alarm_control_panel","scene", "media_player"]
+PLATFORMS = ["light","button"]
 ENTITY_REGISTRY = {}
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant,
+                            entry: ConfigEntry) -> bool:
     """Set up Cleveroom from a config entry."""
     gateway_id = entry.data[CONF_GATEWAY_ID]
     gateway_type = entry.data[CONF_GATEWAY_TYPE]
@@ -129,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.on("on_login_failed", on_login_failed)
     client.on("on_connect_change", on_connect_change)
 
-    # Save gateway data to hass.data,it's support multiple gateways
+    # Save gateway.py data to hass.data,it's support multiple gateways
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "gateway_id": gateway_id,
         "gateway_type": gateway_type,
@@ -146,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Cleveroom connect failure")
         return False
     await discover_cleveroom_devices(hass, entry, client)
+    # 创建 Cleveroom 网关设备
 
     # Register platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

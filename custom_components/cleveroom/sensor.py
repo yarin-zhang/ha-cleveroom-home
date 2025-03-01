@@ -53,7 +53,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                sensor = CleveroomSensor(hass, device, client, gateway_id)
+                sensor = CleveroomSensor(hass, device, client, gateway_id,auto_area)
                 sensors.append(sensor)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][sensor.unique_id] = sensor
@@ -73,7 +73,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    sensor = CleveroomSensor(hass, device, client, gateway_id)
+                    sensor = CleveroomSensor(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [sensor], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -93,7 +93,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
 
 class CleveroomSensor(SensorEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
         self.hass = hass
         self._device = device
         self._client = cast(KLWIOTClient, client)
@@ -180,13 +180,13 @@ class CleveroomSensor(SensorEntity):
             self._attr_device_class = None
             self._attr_unit_of_measurement = None
             self._attr_state_class = None
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._full_name,
-            manufacturer="Cleveroom",
-            model="Generic"
-        )
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._full_name,
+                manufacturer="Cleveroom",
+                model="Generic"
+            )
 
     def init_or_update_entity_state(self, device):
 

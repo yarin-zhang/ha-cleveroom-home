@@ -56,7 +56,7 @@ async def async_setup_entry(
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
-                player = CleveroomMediaPlayer(hass, device, client, gateway_id)
+                player = CleveroomMediaPlayer(hass, device, client, gateway_id,auto_area)
                 media_players.append(player)
 
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -77,7 +77,7 @@ async def async_setup_entry(
                             device_registry_area_update(
                                 floor_registry, area_registry, device_registry, entry, device),
                             hass.loop)
-                    player = CleveroomMediaPlayer(hass, device, client, gateway_id)
+                    player = CleveroomMediaPlayer(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [player], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -97,7 +97,7 @@ async def async_setup_entry(
 
 class CleveroomMediaPlayer(MediaPlayerEntity):
 
-    def __init__(self, hass, device, client, gateway_id):
+    def __init__(self, hass, device, client, gateway_id,auto_area):
 
         self.hass = hass
         self._device = device
@@ -137,14 +137,16 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
                 | MediaPlayerEntityFeature.TURN_OFF
                 | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._name,
-            manufacturer="Cleveroom",
-            model="Generic",
-        )
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER  # 设备类型为扬声器
+
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._name,
+                manufacturer="Cleveroom",
+                model="Generic",
+            )
+
 
     def init_or_update_entity_state(self, device):
         self._device = device
