@@ -58,9 +58,9 @@ DEFAULT_SCAN_INTERVAL = 30
 
 # leveroom has implemented most platforms, but the "remote" platform is poorly supported,
 # so integration is paused.
-# PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan"
-#     , "button", "alarm_control_panel","scene", "media_player"]
-PLATFORMS = ["light","button"]
+PLATFORMS = ["light", "sensor", "climate", "cover", "switch", "binary_sensor", "fan"
+    , "button", "alarm_control_panel","scene", "media_player"]
+# PLATFORMS = ["light","button"]
 ENTITY_REGISTRY = {}
 
 
