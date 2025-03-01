@@ -33,12 +33,13 @@ async def async_setup_entry(
     devices = gateway_data["devices"]
     client = gateway_data["client"]
     gateway_id = gateway_data["gateway_id"]
+    auto_area = gateway_data["auto_area"]
     securitys = []
 
     for device in devices:
         try:
             if is_alarm_control_panel(device):
-                security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id)
+                security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id,auto_area)
                 securitys.append(security)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][security.unique_id] = security
@@ -52,7 +53,7 @@ async def async_setup_entry(
             try:
                 if is_alarm_control_panel(device):
                     _LOGGER.info(f"add alarm panel new devices: {device['oid']}")
-                    security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id)
+                    security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [security], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -70,7 +71,7 @@ async def async_setup_entry(
 class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
     """Representation of a KLWIOT Alarm Control Panel."""
 
-    def __init__(self, hass, device, client, entry, gateway_id) -> None:
+    def __init__(self, hass, device, client, entry, gateway_id,auto_area) -> None:
         """Initialize the alarm control panel."""
         self._client = client
         self._entry = entry
@@ -93,13 +94,15 @@ class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
             AlarmControlPanelEntityFeature.ARM_AWAY
         )
 
-        self.init_or_update_entity_state(device)  #
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._oid)},
-            name=self._name,
-            manufacturer="Cleveroom",
-            model="Generic",
-        )
+        self.init_or_update_entity_state(device)
+
+        if auto_area == 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._oid)},
+                name=self._name,
+                manufacturer="Cleveroom",
+                model="Generic",
+            )
 
     def init_or_update_entity_state(self, device):
         self._device = device
