@@ -33,7 +33,10 @@ class KLWIOTClient(KLWEventEmitter):
         :param host: cleveroom system host
         :param port: cleveroom system port
         :param client_id: client id (if None, use host md5)
-        :param system_level: system level 0~5, 0 - up to 50 devices, 50ms interval, 1 - up to 100 devices, 100ms interval, 2 - up to 200 devices, 200ms interval, 3 -up to 300 devices, 500ms interval, depending on the actual installation environment.
+        :param system_level: system level 0~5,
+         0 - up to 50 devices, 50ms interval,
+         1 - up to 100 devices, 100ms interval,
+         2 - up to 200 devices, 200ms interval, 3 -up to 300 devices, 500ms interval, depending on the actual installation environment.
         :param connect_timeout: Connection timeout, in seconds (Under normal service conditions, it should not exceed 10 seconds. Exceeding this indicates an unstable network)
         :param reconnect_interval: Reconnect interval, in seconds (The reconnection logic is that it must be accessible initially to trigger reconnection)
         """
@@ -144,8 +147,8 @@ class KLWIOTClient(KLWEventEmitter):
     def on_add_device(self, device: CRMDevice, buff_type):
         # self.log(f"Added:{device}, Type:{buff_type}")
         if buff_type == BufferType.RGBBUFFER:
-            # Asynchronous processing
-            asyncio.run(self.delayed_device_create_or_update(device, buff_type))
+            # asyncio.run(self.delayed_device_create_or_update(device, buff_type))
+            pass
         else:
             self.on_device_create_or_update(device, buff_type)
 
@@ -153,8 +156,8 @@ class KLWIOTClient(KLWEventEmitter):
         # self.log(f"Updated:{device}, Type:{buff_type}")
         # Determine if it is RGBBUFFER type data, it should be processed with a delay of 200ms
         if buff_type == BufferType.RGBBUFFER:
-            # Asynchronous processing
-            asyncio.run(self.delayed_device_create_or_update(device, buff_type))
+            # asyncio.run(self.delayed_device_create_or_update(device, buff_type))
+            pass
         else:
             self.on_device_create_or_update(device, buff_type)
 
@@ -749,9 +752,9 @@ class KLWIOTClient(KLWEventEmitter):
     def is_valid_scene(self, scene: int) -> bool:
         """Determine if it is a valid scene."""
         if self.show_stop_scene:
-            return 1 <= scene <= 173
+            return 1 <= scene <=45 and 129<=scene <= 173
         else:
-            return 128 <= scene <= 173
+            return 129 <= scene <= 173
 
     def is_valid_room(self, room_id: int) -> bool:
         """Determine if it is a valid room."""

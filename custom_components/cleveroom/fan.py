@@ -17,6 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
+
+from config.custom_components.cleveroom.base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, device_registry_area_update, DeviceType, is_fan, generate_object_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,32 +85,18 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomFan(FanEntity):
+class CleveroomFan(KLWEntity,FanEntity):
     """Representation of a Cleveroom ventilation device."""
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
+    def __init__(self, hass, device, client, gateway_id, auto_area):
         """Initialize the ventilation device."""
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"fan.{self._object_id}"
 
-        self._name = self._full_name
         self._is_on = False
         self._speed = 0  #
-
-        self._attr_speed_count = 3  #
-
+        self._attr_speed_count = 3
 
         self._attr_supported_features = (
                 FanEntityFeature.TURN_ON |
@@ -116,13 +104,6 @@ class CleveroomFan(FanEntity):
                 FanEntityFeature.SET_SPEED
         )
         self._attr_speed_count = 3
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic",
-            )
 
         self.init_or_update_entity_state(device)
 
@@ -133,14 +114,6 @@ class CleveroomFan(FanEntity):
         # 读取设备状态
         self._is_on = detail.get("on", False)
         self._speed = detail.get("speed", 0)
-
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def is_on(self) -> bool:
@@ -208,17 +181,3 @@ class CleveroomFan(FanEntity):
         except Exception as e:
             _LOGGER.error(f"Failed to set speed for ventilation {self._oid}: {e}")
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
-                                f"skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

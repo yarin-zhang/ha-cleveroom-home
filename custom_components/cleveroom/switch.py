@@ -15,6 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
+
+from config.custom_components.cleveroom.base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_switch, \
     generate_object_id
 
@@ -80,35 +82,16 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomSwitch(SwitchEntity):
+class CleveroomSwitch(KLWEntity,SwitchEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"switch.{self._object_id}"
 
-        self._name = self._full_name
         self._is_on = False
         self.init_or_update_entity_state(device)
 
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._name,
-                manufacturer="Cleveroom",
-                model=self._device["detail"].get("model", "Generic"),
-
-            )
 
     def init_or_update_entity_state(self, device):
 
@@ -140,14 +123,3 @@ class CleveroomSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs):
         self._client.controller.control("DeviceOff", [{"oid": self._oid}])
         self.async_write_ha_state()
-
-    async def async_update(self):
-        device = self._client.devicebucket.get_device_from_database(self._oid)
-        if device is None:
-            _LOGGER.error(f"Device not found: {self._oid}")
-            return
-        self.init_or_update_entity_state(device)
-        if self.entity_id:
-            self.async_write_ha_state()
-        else:
-            _LOGGER.warning(f"Entity {self.name} not yet registered, skipping async_write_ha_state")

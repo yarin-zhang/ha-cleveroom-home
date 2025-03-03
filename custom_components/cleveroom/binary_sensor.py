@@ -30,6 +30,8 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 
+from .base import KLWEntity
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -93,26 +95,15 @@ async def async_setup_entry(  # Changed to async_setup_entry
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomBinarySensor(BinarySensorEntity):
+class CleveroomBinarySensor(KLWEntity,BinarySensorEntity):
     """Representation of a  Binary Sensor."""
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
-        self.hass = hass
-        self._device = device
-        self._client = cast(KLWIOTClient, client)
-        self._oid = device["oid"]
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        self._full_name = f"{fName} {rName} {dName}".strip()
-
-        self._name = self._full_name
         self._value = None
         self._did = device["detail"]["did"]
 
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"binary_sensor.{self._object_id}"
 
         self.init_or_update_entity_state(device)
@@ -127,26 +118,12 @@ class CleveroomBinarySensor(BinarySensorEntity):
             self._attr_device_class = BinarySensorDeviceClass.GAS
         else:
             self._attr_device_class = None
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic"
-            )
+
 
     def init_or_update_entity_state(self, device):
         self._device = device
         detail = device["detail"]
         self._value = detail["value"]
-
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def is_on(self) -> bool:
@@ -159,17 +136,3 @@ class CleveroomBinarySensor(BinarySensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         return self._attr_device_info
-
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

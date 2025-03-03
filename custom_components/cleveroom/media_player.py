@@ -22,6 +22,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 
+from config.custom_components.cleveroom.base import KLWEntity
 from . import (DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType,
                device_registry_area_update, is_media_player,
     generate_object_id)
@@ -95,25 +96,13 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomMediaPlayer(MediaPlayerEntity):
+class CleveroomMediaPlayer(KLWEntity,MediaPlayerEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
-
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"media_player.{self._object_id}"
 
-        self._name = self._full_name
         self._state = MediaPlayerState.OFF  #
         self._volume = 0.5  # default volume (0.0 - 1.0)
         self._muted = False
@@ -139,15 +128,6 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
         )
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER  # 设备类型为扬声器
 
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._name,
-                manufacturer="Cleveroom",
-                model="Generic",
-            )
-
-
     def init_or_update_entity_state(self, device):
         self._device = device
         detail = device["detail"]
@@ -163,14 +143,6 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
 
         self._muted = False
         self._tf_folder = None
-
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -290,17 +262,3 @@ class CleveroomMediaPlayer(MediaPlayerEntity):
     def supported_features(self) -> int:
         return self._attr_supported_features
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
-                                f"skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

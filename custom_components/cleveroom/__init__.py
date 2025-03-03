@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant,
             keeplive=True,
             language=language,
             bucket_manager=bucket_data_manager,
-            data_changed_callback=data_changed_callback
+            data_changed_callback=data_changed_callback,
         )
     else:
         secure_code = entry.data[CONF_SECURE_CODE]
@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant,
             keeplive=True,
             language=language,
             bucket_manager=bucket_data_manager,
-            data_changed_callback=data_changed_callback
+            data_changed_callback=data_changed_callback,
         )
     # client.enable_logger()
     device_bucket = client.devicebucket

@@ -22,6 +22,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 
+from config.custom_components.cleveroom.base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, generate_object_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,23 +112,16 @@ async def async_setup_entry(
     async_add_entities(remotes)
 
 
-class CleveroomRemote(RemoteEntity):
+class CleveroomRemote(KLWEntity,RemoteEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
+    def __init__(self, hass, device, client, gateway_id, auto_area):
 
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName} - RC".strip()
+        self._full_name = f"{self._full_name} - RC".strip()
         self._object_id = generate_object_id(gateway_id, self._oid + "_RC")
         self.entity_id = f"remote.{self._object_id}"
+        detail = device["detail"]
 
         self._name = self._full_name
         # 存储学习到的命令,0-23
@@ -136,25 +130,10 @@ class CleveroomRemote(RemoteEntity):
         self._activity_list = list(LANGUANG_RC.keys())
         self._target_entity = detail.get(CONF_TARGET_ENTITY)
 
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._name,
-                manufacturer="Cleveroom",
-                model="Generic",
-            )
-
     def init_or_update_entity_state(self, device):
         self._device = device
         detail = device["detail"]
 
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def current_activity(self):
@@ -188,18 +167,3 @@ class CleveroomRemote(RemoteEntity):
             **kwargs,
     ) -> None:
         _LOGGER.info(f"learn command: {command}")
-
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
-                                f"skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

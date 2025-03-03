@@ -18,6 +18,8 @@ from homeassistant.config_entries import ConfigEntry  # Import ConfigEntry
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
+
+from config.custom_components.cleveroom.base import KLWEntity
 from . import DOMAIN, KLWIOTClient, ENTITY_REGISTRY, device_registry_area_update, DeviceType, is_cover, \
     generate_object_id
 
@@ -82,25 +84,13 @@ async def async_setup_entry(  # Changed to async_setup_entry
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomCover(CoverEntity):
+class CleveroomCover(KLWEntity,CoverEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"cover.{self._object_id}"
 
-        self._name = self._full_name
         self._is_on = False
         self._scale = 0
         self._current_cover_position = 0
@@ -115,14 +105,6 @@ class CleveroomCover(CoverEntity):
                 | CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.STOP
         )
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic"
-
-            )
 
     def init_or_update_entity_state(self, device):
 
@@ -132,17 +114,6 @@ class CleveroomCover(CoverEntity):
         self._scale = device["detail"].get("scale", self._scale)
         self._current_cover_position = self._scale * 10  # transform to 0-100
 
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    # @property
-    # def is_closed(self) -> bool | None:
-    #     return self._scale == 0
 
     @property
     def current_cover_position(self) -> int | None:
@@ -184,20 +155,6 @@ class CleveroomCover(CoverEntity):
         self._client.controller.control("ShadePause", [{"oid": self._oid}])
         self.async_write_ha_state()
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} "
-                                f"not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
 
     @property
     def current_cover_position(self):

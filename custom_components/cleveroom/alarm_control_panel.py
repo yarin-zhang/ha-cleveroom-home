@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 import logging
 
+from config.custom_components.cleveroom.base import KLWEntity
 from . import (DOMAIN, KLWIOTClient, ENTITY_REGISTRY,
                get_translation, is_alarm_control_panel, generate_object_id)
 
@@ -39,7 +40,7 @@ async def async_setup_entry(
     for device in devices:
         try:
             if is_alarm_control_panel(device):
-                security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id,auto_area)
+                security = CleveroomAlarmControlPanel(hass, device, client, gateway_id,auto_area)
                 securitys.append(security)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][security.unique_id] = security
@@ -53,7 +54,7 @@ async def async_setup_entry(
             try:
                 if is_alarm_control_panel(device):
                     _LOGGER.info(f"add alarm panel new devices: {device['oid']}")
-                    security = CleveroomAlarmControlPanel(hass, device, client, entry, gateway_id,auto_area)
+                    security = CleveroomAlarmControlPanel(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(hass, async_add_entities, [security], True), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
@@ -68,18 +69,12 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
+class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
     """Representation of a KLWIOT Alarm Control Panel."""
 
-    def __init__(self, hass, device, client, entry, gateway_id,auto_area) -> None:
+    def __init__(self, hass, device, client, gateway_id, auto_area) -> None:
         """Initialize the alarm control panel."""
-        self._client = client
-        self._entry = entry
-        self.hass = hass
-        self._device = device
-
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
         self._attr_alarm_state = AlarmControlPanelState.DISARMED  # Initial state using _attr_alarm_state
         self._attr_name = get_translation(hass, "security_system_title", "Cleveroom Security System")
@@ -87,7 +82,6 @@ class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
         self._attr_code_format = None  # Assuming numeric code
         self._attr_code_arm_required = False  # Code IS required for arming
 
-        self._object_id = generate_object_id(gateway_id, self._oid)  # generate object_id
         self.entity_id = f"alarm_control_panel.{self._object_id}"  # generate entity_id
 
         self._attr_supported_features = (
@@ -96,13 +90,6 @@ class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
 
         self.init_or_update_entity_state(device)
 
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._name,
-                manufacturer="Cleveroom",
-                model="Generic",
-            )
 
     def init_or_update_entity_state(self, device):
         self._device = device
@@ -116,9 +103,6 @@ class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
         elif state == 1:
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
-    @property
-    def unique_id(self) -> str:
-        return self._oid
 
     @property
     def code_format(self) -> CodeFormat | None:
@@ -167,17 +151,3 @@ class CleveroomAlarmControlPanel(AlarmControlPanelEntity):
             self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error(f"error: {e}")
-
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

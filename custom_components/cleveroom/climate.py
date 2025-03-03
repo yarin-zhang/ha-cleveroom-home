@@ -33,6 +33,7 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_climate, is_heater, \
     generate_object_id
+from .base import KLWEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,27 +150,14 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomClimate(ClimateEntity):
+class CleveroomClimate(KLWEntity,ClimateEntity):
     """Representation of a Cleveroom climate device."""
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
+    def __init__(self, hass, device, client, gateway_id, auto_area):
         """Initialize the climate device."""
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
-
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-
-        self._object_id = generate_object_id(gateway_id, self._oid)
+        super().__init__(hass, device, client, gateway_id, auto_area)
         self.entity_id = f"climate.{self._object_id}"
 
-        self._name = self._full_name
         # self._temperature = 0
         self._hvac_mode = HVACMode.OFF
         self._fan_mode = FAN_LOW
@@ -202,14 +190,6 @@ class CleveroomClimate(ClimateEntity):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_target_temperature_high = 30
         self._attr_target_temperature_low = 15
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic",
-
-            )
 
     def init_or_update_entity_state(self, device):
         self._device = device
@@ -235,16 +215,6 @@ class CleveroomClimate(ClimateEntity):
             self._current_temperature = self._target_temperature
         if detail.get("ambient_hum") is not None:
             self._current_humidity = detail.get("ambient_hum", 0)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this climate device."""
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._name
 
     @property
     def temperature_unit(self) -> str:
@@ -388,46 +358,19 @@ class CleveroomClimate(ClimateEntity):
         self._client.controller.control("SetMode", [{"oid": self._oid, "value": mode}])
         self.async_write_ha_state()
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
 
 
-class CleveroomFloorHeating(ClimateEntity):
+class CleveroomFloorHeating(KLWEntity,ClimateEntity):
     """Representation of a Cleveroom floor heating device."""
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
+    def __init__(self, hass, device, client, gateway_id, auto_area):
         """Initialize the floor heating device."""
+        super().__init__(hass, device, client, gateway_id, auto_area)
+
         self._current_humidity = None
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
 
-        self._area_registry = ar.async_get(hass)
-        self._device_registry = dr.async_get(hass)
-
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"climate.{self._object_id}"
 
-        self._name = self._full_name
         self._hvac_mode = HVACMode.OFF
         self._target_temperature = 20
         self._current_temperature = 0
@@ -446,14 +389,6 @@ class CleveroomFloorHeating(ClimateEntity):
         self._attr_min_temp = self._min_temp
         self._attr_max_temp = self._max_temp
         self.init_or_update_entity_state(device)
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic",
-
-            )
 
     def init_or_update_entity_state(self, device):
         self._device = device
@@ -475,14 +410,6 @@ class CleveroomFloorHeating(ClimateEntity):
                 self._hvac_mode = HVACMode.HEAT
         else:
             self._hvac_mode = HVACMode.OFF
-
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def temperature_unit(self) -> str:
@@ -579,16 +506,3 @@ class CleveroomFloorHeating(ClimateEntity):
         except Exception as e:
             _LOGGER.error(f"Failed to set HVAC mode for {self._oid}: {e}")
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")

@@ -167,7 +167,8 @@ class DeviceBucket:
                             'changeObj': change_obj
                         }
 
-            if D1 == 243 and (D5 == 4 or D5 == 191 or D5 == 192 or (81 <= D5 <= 89)):
+            if D1 == 243 and D2==204 and (D5 == 4 or D5 == 191 or D5 == 192 or (81 <= D5 <= 89)):
+
                 o = {
                     "uid": uid,
                     "category": DeviceType.AIR_CONDITION

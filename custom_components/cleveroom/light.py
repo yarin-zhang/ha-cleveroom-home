@@ -24,6 +24,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import device_registry as dr
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_light, \
     generate_object_id
+from .base import KLWEntity
 
 _LOGGER = logging.getLogger(__name__)
 # Cleveroom system support min and max color temperature
@@ -100,30 +101,16 @@ async def async_setup_entry(
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomLight(LightEntity):
+class CleveroomLight(KLWEntity,LightEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
-        self.hass = hass
-        self._device = device
-        self._oid = device["oid"]
-        self._client = cast(KLWIOTClient, client)
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._floor = fName
-        self._room = rName
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"light.{self._object_id}"
 
-        self._name = self._full_name
-        self._is_on = False  #
-        self._brightness = 0  # default brightness 0
-        self._color_temp = None  # color temperature 0-100
+        self._is_on = False
+        self._brightness = 0
+        self._color_temp = None
         self._rgb_color = None
         self._hs_color = None
         self._category = device["detail"].get("category")
@@ -147,13 +134,6 @@ class CleveroomLight(LightEntity):
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic"
-            )
 
     def init_or_update_entity_state(self, device):
 
@@ -178,13 +158,6 @@ class CleveroomLight(LightEntity):
             if "warm" in detail:
                 self._color_temp = detail["warm"]
 
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def is_on(self) -> bool:
@@ -226,6 +199,8 @@ class CleveroomLight(LightEntity):
     def color_mode(self):
         """Return the color mode of the light."""
         return self._attr_color_mode
+
+
 
     async def async_turn_on(self, **kwargs):
         _LOGGER.debug(f"Turn on: {self._oid}, params: {kwargs}")
@@ -282,20 +257,6 @@ class CleveroomLight(LightEntity):
         self._client.controller.control("DeviceOff", [{"oid": self._oid}])
         self._is_on = False
         self.async_write_ha_state()
-
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
 
     def _hex_to_rgb(self, hex_color):
         hex_color = hex_color.lstrip("#")

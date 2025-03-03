@@ -24,6 +24,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.config_entries import ConfigEntry  # Import ConfigEntry
+
+from config.custom_components.cleveroom.base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_scene, is_sensor, \
     generate_object_id
 from homeassistant.helpers import floor_registry as fr
@@ -91,29 +93,16 @@ async def async_setup_entry(  # Changed to async_setup_entry
     client.on("on_device_change", async_device_discovered)
 
 
-class CleveroomSensor(SensorEntity):
+class CleveroomSensor(KLWEntity,SensorEntity):
 
-    def __init__(self, hass, device, client, gateway_id,auto_area):
-        self.hass = hass
-        self._device = device
-        self._client = cast(KLWIOTClient, client)
-        self._oid = device["oid"]
+    def __init__(self, hass, device, client, gateway_id, auto_area):
+        super().__init__(hass, device, client, gateway_id, auto_area)
 
-        detail = device["detail"]
-        fName = detail.get("fName", "")
-        rName = detail.get("rName", "")
-        dName = detail.get("dName", "")
-
-        self._full_name = f"{fName} {rName} {dName}".strip()
-        self._object_id = generate_object_id(gateway_id, self._oid)
         self.entity_id = f"sensor.{self._object_id}"
 
-        self._name = self._full_name
         self._unit = ''
         self._value = 0
         self._did = device["detail"]["did"]
-
-        self.init_or_update_entity_state(device)
 
         if self._did == 20:  # temperature
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -180,27 +169,14 @@ class CleveroomSensor(SensorEntity):
             self._attr_device_class = None
             self._attr_unit_of_measurement = None
             self._attr_state_class = None
-        if auto_area == 1:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._oid)},
-                name=self._full_name,
-                manufacturer="Cleveroom",
-                model="Generic"
-            )
+
+        self.init_or_update_entity_state(device)
 
     def init_or_update_entity_state(self, device):
 
         self._device = device
         detail = device["detail"]
         self._value = detail["value"]
-
-    @property
-    def unique_id(self) -> str:
-        return self._oid
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -214,17 +190,3 @@ class CleveroomSensor(SensorEntity):
     def native_unit_of_measurement(self):
         return self._attr_unit_of_measurement
 
-    async def async_update(self):
-        try:
-            device = self._client.devicebucket.get_device_from_database(self._oid)
-            if device is None:
-                _LOGGER.error(f"Device not found: {self._oid}")
-                return
-            self.init_or_update_entity_state(device)
-            if self.entity_id:
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(f"Entity {self._oid}{self.name} not yet registered, "
-                                f"skipping async_write_ha_state")
-        except Exception as e:
-            _LOGGER.error(f"Failed to update entity {self._oid}{self.name}: {e}")
