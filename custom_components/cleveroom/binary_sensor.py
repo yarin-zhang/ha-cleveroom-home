@@ -79,7 +79,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                     sensor = CleveroomBinarySensor(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
                         async_add_entities_wrapper(
-                            hass, async_add_entities, [sensor], True), hass.loop)
+                            hass, async_add_entities, [sensor], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][sensor.unique_id] = sensor
             except KeyError as e:

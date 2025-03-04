@@ -31,7 +31,6 @@ async def async_setup_entry(
             QueryStatusButton(hass, client, gateway_id),
             ClearCacheButton(hass, client, gateway_id),
         ],
-        True,
     )
 
 

@@ -26,6 +26,8 @@ class KLWEntity(Entity):
                 manufacturer="Cleveroom",
                 model="Generic"
             )
+        else:
+            self._attr_device_info = None
 
     def init_or_update_entity_state(self, device):
         """Initialize or update the entity state."""
@@ -38,6 +40,7 @@ class KLWEntity(Entity):
     @property
     def name(self) -> str:
         return self._name
+
     @property
     def available(self) -> bool:
         """Return if entity is available."""
@@ -45,10 +48,10 @@ class KLWEntity(Entity):
         device = self._client.devicebucket.get_device_from_database(self._oid)
         return device is not None
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        self.async_write_ha_state()
+    # async def async_added_to_hass(self) -> None:
+    #     """Run when entity about to be added to hass."""
+    #     await super().async_added_to_hass()
+    #     self.async_write_ha_state()
 
     async def async_update(self):
         """

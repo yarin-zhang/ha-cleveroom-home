@@ -66,7 +66,7 @@ async def async_setup_entry(
                             hass.loop)
                     toggle = CleveroomSwitch(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [toggle], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [toggle], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][toggle.unique_id] = toggle
             except KeyError as e:

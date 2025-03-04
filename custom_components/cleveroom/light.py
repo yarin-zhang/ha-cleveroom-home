@@ -60,6 +60,7 @@ async def async_setup_entry(
     for device in devices:
         try:
             if is_light(device):
+
                 if auto_area == 1:
                     await device_registry_area_update(
                         floor_registry, area_registry, device_registry, entry, device)
@@ -67,6 +68,7 @@ async def async_setup_entry(
                 lights.append(light)
                 ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                 ENTITY_REGISTRY[entry.entry_id][light.unique_id] = light
+                _LOGGER.info(f"restore light: {device['oid']}  unique_id:{light.unique_id} ")
         except KeyError as e:
             _LOGGER.warning(
                 f"Device data is incomplete, skip: {device.get('oid', 'unknow')}, error message: {e}"
@@ -85,9 +87,10 @@ async def async_setup_entry(
                             hass.loop)
                     light = CleveroomLight(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [light], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [light], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][light.unique_id] = light
+                    _LOGGER.info(f"new light: {device['oid']}  unique_id:{light.unique_id} ")
             except KeyError as e:
                 _LOGGER.warning(f"Device data is incomplete, skip: {device.get('oid', 'unknow')},"
                                 f" error message: {e}")

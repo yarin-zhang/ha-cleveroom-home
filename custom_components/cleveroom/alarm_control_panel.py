@@ -56,7 +56,7 @@ async def async_setup_entry(
                     _LOGGER.info(f"add alarm panel new devices: {device['oid']}")
                     security = CleveroomAlarmControlPanel(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [security], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [security], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][security.unique_id] = security
             except KeyError as e:

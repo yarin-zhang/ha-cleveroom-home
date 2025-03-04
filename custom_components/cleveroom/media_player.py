@@ -80,7 +80,7 @@ async def async_setup_entry(
                             hass.loop)
                     player = CleveroomMediaPlayer(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [player], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [player], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][player.unique_id] = player
             except KeyError as e:

@@ -69,7 +69,7 @@ async def async_setup_entry(  # Changed to async_setup_entry
                             hass.loop)
                     cover = CleveroomCover(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [cover], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [cover], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][cover.unique_id] = cover
             except KeyError as e:

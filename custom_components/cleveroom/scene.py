@@ -67,7 +67,7 @@ async def async_setup_entry(
                             hass.loop)
                     scene = CleveroomScene(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [scene], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [scene], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][scene.unique_id] = scene
             except KeyError as e:

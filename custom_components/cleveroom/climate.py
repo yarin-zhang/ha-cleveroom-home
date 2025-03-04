@@ -122,7 +122,7 @@ async def async_setup_entry(
                             hass.loop)
                     climate = CleveroomClimate(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [climate], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [climate], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][climate.unique_id] = climate
                 elif is_heater(device):
@@ -134,7 +134,7 @@ async def async_setup_entry(
                             hass.loop)
                     climate = CleveroomFloorHeating(hass, device, client, gateway_id,auto_area)
                     asyncio.run_coroutine_threadsafe(
-                        async_add_entities_wrapper(hass, async_add_entities, [climate], True), hass.loop)
+                        async_add_entities_wrapper(hass, async_add_entities, [climate], False), hass.loop)
                     ENTITY_REGISTRY.setdefault(entry.entry_id, {})
                     ENTITY_REGISTRY[entry.entry_id][climate.unique_id] = climate
             except KeyError as e:
