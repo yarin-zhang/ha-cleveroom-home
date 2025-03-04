@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 import logging
 
-from config.custom_components.cleveroom.base import KLWEntity
+from .base import KLWEntity
 from . import (DOMAIN, KLWIOTClient, ENTITY_REGISTRY,
                get_translation, is_alarm_control_panel, generate_object_id)
 

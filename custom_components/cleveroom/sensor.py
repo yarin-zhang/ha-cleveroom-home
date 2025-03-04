@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.config_entries import ConfigEntry  # Import ConfigEntry
 
-from config.custom_components.cleveroom.base import KLWEntity
+from .base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_scene, is_sensor, \
     generate_object_id
 from homeassistant.helpers import floor_registry as fr

@@ -16,7 +16,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 
-from config.custom_components.cleveroom.base import KLWEntity
+from .base import KLWEntity
 from . import DOMAIN, ENTITY_REGISTRY, KLWIOTClient, DeviceType, device_registry_area_update, is_switch, \
     generate_object_id
 
