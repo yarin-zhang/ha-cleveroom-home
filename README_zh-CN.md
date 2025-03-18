@@ -7,11 +7,28 @@
 
 ---
 
-## 安装方式
+## 在线安装
 
 - 1.在 HACS -> 自定义存储库, 添加插件的`存储库`为 "https://github.com/cleveroom-code/ha-cleveroom-home" 并选择类别为`集成`. 选择名为 `Cleveroom` 的插件并点击下载安装.
 
 - 2.重启 Home Assistant .
+## 离线安装
+
+由于网络的限制，通过hacs或者离线在安装依赖的时候都不容易成功，为了保证插件的可用，我们把依赖的包都打包到插件中，请按照如下步骤操作
+
+- 1.打包依赖包
+
+```bash
+#下载必要的插件
+pip install -r requirements.txt -t ./releases/libs
+#打包插件
+python3 package-addon.py
+```
+
+- 2.根据上面的操作以后会生成一个离线安装包在releases目录下，cleveroom-1.0.0.zip,将cleveroom-1.0.0.zip包上传到Home Assistant的`/config/custom_components`目录下.
+- 3.解压cleveroom-1.0.0.zip包，解压后会生成一个cleveroom目录，将cleveroom目录放到`/config/custom_components`目录下，请注意cleveroom目录下必须有__init__.py文件，如果没有或者多余文件夹请处理好
+- 4.重启 Home Assistant .
+- 5.在 设备与服务 > 添加集成 > `Cleveroom`. 会弹出 `Cleveroom` 的配置界面.
 
 ---
 ## 配置方法

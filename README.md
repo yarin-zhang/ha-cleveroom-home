@@ -12,11 +12,26 @@ This is a plugin for Home Assistant that allows you to integrate devices from th
 
 ---
 
-## Installation
+##Online Installation
 
 - 1.  In HACS -> Custom Repositories, add the plugin's `repository` as "https://github.com/cleveroom-code/ha-cleveroom-home" and select the category as `Integration`. Choose the plugin named `Cleveroom` and click Download to install.
 
 - 2.  Restart Home Assistant.
+
+## Offline Installation
+
+- 1. Due to network restrictions, installing dependencies through HACS or offline methods can be challenging. To ensure plugin availability, we have bundled all required dependencies into the plugin. Please follow these steps:
+
+```bash
+#Download necessary plugins
+pip install -r requirements.txt -t ./releases/libs
+#Package the plugin
+python3 package-addon.py
+```
+- 2. After completing the above steps, an offline installation package will be generated in the releases directory, named cleveroom-1.0.0.zip. Upload this package to the Home Assistant /config/custom_components directory.
+- 3. Extract the cleveroom-1.0.0.zip package, which will create a cleveroom directory. Place this directory in the /config/custom_components directory. Note that the cleveroom directory must contain an init.py file. If this file is missing or there are extra folders, please address this accordingly.
+- 4. Restart Home Assistant.
+- 5Navigate to Settings > Devices & Services > Add Integration > Cleveroom. The Cleveroom configuration interface will appear.
 
 ---
 
