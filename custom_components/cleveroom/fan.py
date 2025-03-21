@@ -113,7 +113,11 @@ class CleveroomFan(KLWEntity,FanEntity):
         detail = device["detail"]
         # 读取设备状态
         self._is_on = detail.get("on", False)
-        self._speed = detail.get("speed", 0)
+        #speed 1-3 ->0~2
+        if detail.get("speed") is not None:
+            v = detail.get("speed")
+            if 1 <= v <= 3:
+                self._speed = v
 
     @property
     def is_on(self) -> bool:
@@ -121,7 +125,7 @@ class CleveroomFan(KLWEntity,FanEntity):
 
     @property
     def percentage(self) -> str | None:
-        speeds = [33, 66, 100]
+        speeds = [0,33, 66, 100]
         return speeds[self._speed]
 
     @property

@@ -3,15 +3,14 @@ Platform for alarm control panel integration.
 For more detailed information, please refer to: https://www.cleveroom.com
 """
 import asyncio
+from enum import StrEnum
 from typing import cast
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntity, AlarmControlPanelState)
+    AlarmControlPanelEntity)
 from homeassistant.components.alarm_control_panel.const import (
     AlarmControlPanelEntityFeature, CodeFormat)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import translation
-from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,6 +22,21 @@ from . import (DOMAIN, KLWIOTClient, ENTITY_REGISTRY,
                get_translation, is_alarm_control_panel, generate_object_id)
 
 _LOGGER = logging.getLogger(__name__)
+
+#add AlarmControlPanelState Enum ,it's the same as the one in homeassistant,but compatible with older versions
+class AlarmControlPanelState(StrEnum):
+    """Alarm control panel entity states."""
+
+    DISARMED = "disarmed"
+    ARMED_HOME = "armed_home"
+    ARMED_AWAY = "armed_away"
+    ARMED_NIGHT = "armed_night"
+    ARMED_VACATION = "armed_vacation"
+    ARMED_CUSTOM_BYPASS = "armed_custom_bypass"
+    PENDING = "pending"
+    ARMING = "arming"
+    DISARMING = "disarming"
+    TRIGGERED = "triggered"
 
 
 async def async_setup_entry(
