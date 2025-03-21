@@ -3,7 +3,6 @@ Platform for alarm control panel integration.
 For more detailed information, please refer to: https://www.cleveroom.com
 """
 import asyncio
-from enum import StrEnum
 from typing import cast
 
 from homeassistant.components.alarm_control_panel import (
@@ -11,6 +10,13 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.alarm_control_panel.const import (
     AlarmControlPanelEntityFeature, CodeFormat)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import translation
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,21 +28,6 @@ from . import (DOMAIN, KLWIOTClient, ENTITY_REGISTRY,
                get_translation, is_alarm_control_panel, generate_object_id)
 
 _LOGGER = logging.getLogger(__name__)
-
-#add AlarmControlPanelState Enum ,it's the same as the one in homeassistant,but compatible with older versions
-class AlarmControlPanelState(StrEnum):
-    """Alarm control panel entity states."""
-
-    DISARMED = "disarmed"
-    ARMED_HOME = "armed_home"
-    ARMED_AWAY = "armed_away"
-    ARMED_NIGHT = "armed_night"
-    ARMED_VACATION = "armed_vacation"
-    ARMED_CUSTOM_BYPASS = "armed_custom_bypass"
-    PENDING = "pending"
-    ARMING = "arming"
-    DISARMING = "disarming"
-    TRIGGERED = "triggered"
 
 
 async def async_setup_entry(
@@ -90,20 +81,19 @@ class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
         """Initialize the alarm control panel."""
         super().__init__(hass, device, client, gateway_id, auto_area)
 
-        self._attr_alarm_state = AlarmControlPanelState.DISARMED  # Initial state using _attr_alarm_state
+        self._state = STATE_ALARM_DISARMED  # 初始状态
         self._attr_name = get_translation(hass, "security_system_title", "Cleveroom Security System")
         self._name = self._attr_name
-        self._attr_code_format = None  # Assuming numeric code
-        self._attr_code_arm_required = False  # Code IS required for arming
+        self._attr_code_format = None  # 假设数字代码
+        self._attr_code_arm_required = False  # 不需要代码进行布防
 
-        self.entity_id = f"alarm_control_panel.{self._object_id}"  # generate entity_id
+        self.entity_id = f"alarm_control_panel.{self._object_id}"  # 生成实体ID
 
         self._attr_supported_features = (
             AlarmControlPanelEntityFeature.ARM_AWAY
         )
 
         self.init_or_update_entity_state(device)
-
 
     def init_or_update_entity_state(self, device):
         self._device = device
@@ -113,10 +103,9 @@ class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
         state = detail.get("cover")
 
         if state == 2 or state == 0:
-            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
+            self._state = STATE_ALARM_ARMED_AWAY
         elif state == 1:
-            self._attr_alarm_state = AlarmControlPanelState.DISARMED
-
+            self._state = STATE_ALARM_DISARMED
 
     @property
     def code_format(self) -> CodeFormat | None:
@@ -127,16 +116,16 @@ class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
         return self._attr_code_arm_required
 
     @property
-    def alarm_state(self):
+    def state(self):
         """Return the state of the alarm control panel."""
-        return self._attr_alarm_state
+        return self._state
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         _LOGGER.info("Send arm away command")
         try:
             self._client.controller.control("SetSecurity", [{"oid": self._oid, "value": 2}])
-            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
+            self._state = STATE_ALARM_ARMED_AWAY
             self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error(f"error: {e}")
@@ -151,7 +140,7 @@ class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
         _LOGGER.info("Send disarm command")
         try:
             self._client.controller.control("SetSecurity", [{"oid": self._oid, "value": 1}])
-            self._attr_alarm_state = AlarmControlPanelState.DISARMED
+            self._state = STATE_ALARM_DISARMED
             self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error(f"error: {e}")
@@ -161,7 +150,7 @@ class CleveroomAlarmControlPanel(KLWEntity,AlarmControlPanelEntity):
         _LOGGER.info("Send trigger command")
         try:
             self._client.controller.control("SetSecurity", [{"oid": self._oid, "value": 2}])
-            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+            self._state = STATE_ALARM_TRIGGERED
             self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error(f"error: {e}")
