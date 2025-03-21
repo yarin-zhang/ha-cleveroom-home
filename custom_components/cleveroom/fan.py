@@ -113,19 +113,23 @@ class CleveroomFan(KLWEntity,FanEntity):
         detail = device["detail"]
         # 读取设备状态
         self._is_on = detail.get("on", False)
-        #speed 1-3 ->0~2
-        if detail.get("speed") is not None:
-            v = detail.get("speed")
-            if 1 <= v <= 3:
-                self._speed = v
+        self._speed = detail.get("speed", 0)
 
     @property
     def is_on(self) -> bool:
         return self._is_on
 
     @property
-    def percentage(self) -> str | None:
-        speeds = [0,33, 66, 100]
+    def percentage(self) -> Optional[int]:
+        """Return the current speed percentage."""
+        speeds = [0, 33, 66, 100]
+        if not self._is_on:
+            return 0
+        # Add safety check to ensure index is within valid range
+        if self._speed is None or self._speed < 0 or self._speed >= len(speeds):
+            _LOGGER.warning(
+                f"Fan {self._oid} has an invalid speed value {self._speed}, using default value")
+            return 0
         return speeds[self._speed]
 
     @property
